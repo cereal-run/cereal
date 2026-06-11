@@ -14,7 +14,7 @@
  * recreates all tables with the current schema — including the decoupled
  * accounts model and all unique constraints.
  */
-import { neon } from '@neondatabase/serverless'
+import pg from 'pg'
 import { initDb } from './index.js'
 
 const DATABASE_URL = process.env.DATABASE_URL
@@ -40,7 +40,12 @@ try {
   console.log('[reset] Target database: (could not parse host from DATABASE_URL)')
 }
 
-const sql = neon(DATABASE_URL)
+const pool = new pg.Pool({
+  connectionString: DATABASE_URL,
+  ssl: /sslmode=(require|prefer|verify-ca|verify-full)/.test(DATABASE_URL)
+    ? { rejectUnauthorized: process.env.DATABASE_SSL_NO_VERIFY !== 'true' }
+    : undefined,
+})
 
 // Order doesn't matter with CASCADE, but listed child→parent for clarity.
 const TABLES = [
@@ -61,7 +66,7 @@ async function reset() {
   for (const table of TABLES) {
     // The serverless driver: sql.query() runs a plain (non-tagged-template) string.
     // DDL like DROP TABLE has no parameters, so this is the right call.
-    await sql.query(`DROP TABLE IF EXISTS ${table} CASCADE`)
+    await pool.query(`DROP TABLE IF EXISTS ${table} CASCADE`)
     console.log(`[reset]   dropped ${table}`)
   }
 

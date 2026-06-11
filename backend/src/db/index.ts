@@ -1,19 +1,53 @@
-import { neon, type NeonQueryFunction } from '@neondatabase/serverless'
+import pg from 'pg'
 import { randomBytes } from 'crypto'
 import type { Bowl, Account, Folder, Message, SyncState, AgentMessage } from '../types.js'
 import { encrypt, decrypt, isEncrypted, hashToken, keyPreview, sha256Hex } from '../crypto.js'
 
-let sql: NeonQueryFunction<false, false>
+let pool: pg.Pool | null = null
 
+/**
+ * Tagged-template query function over node-postgres. Interpolated values
+ * become positional parameters ($1, $2, ...) — never string-concatenated —
+ * so every query through `q` is parameterized.
+ *
+ * Returns the rows array (matching the previous Neon driver's shape) with a
+ * non-enumerable `count` property carrying rowCount, for DML statements
+ * where the affected-row count matters.
+ */
 async function q(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
-  const result = await sql(strings, ...values)
-  return result as any[]
+  if (!pool) throw new Error('Database not initialized — call initDb() first')
+  let text = ''
+  for (let i = 0; i < strings.length; i++) {
+    text += strings[i]
+    if (i < values.length) text += `$${i + 1}`
+  }
+  const res = await pool.query(text, values)
+  const rows = res.rows as any[]
+  Object.defineProperty(rows, 'count', { value: res.rowCount ?? 0, enumerable: false })
+  return rows
+}
+
+/**
+ * Decide TLS settings from the connection string. Managed Postgres (Neon,
+ * Supabase, RDS, ...) typically requires TLS — append `?sslmode=require` to
+ * DATABASE_URL. Certificates are verified by default; for a self-hosted
+ * server with a self-signed cert, set DATABASE_SSL_NO_VERIFY=true.
+ */
+function sslConfigFromUrl(url: string): pg.PoolConfig['ssl'] {
+  if (!/sslmode=(require|prefer|verify-ca|verify-full)/.test(url)) return undefined
+  return { rejectUnauthorized: process.env.DATABASE_SSL_NO_VERIFY !== 'true' }
 }
 
 export async function initDb(): Promise<void> {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL environment variable is required')
-  sql = neon(url)
+  pool = new pg.Pool({
+    connectionString: url,
+    ssl: sslConfigFromUrl(url),
+    max: 10,
+  })
+  // Fail fast on bad credentials/host instead of at first query.
+  await pool.query('SELECT 1')
   await createSchema()
   await migrateAccountsAddOAuthColumns()
   await migrateAgentKeysSchema()
@@ -21,7 +55,7 @@ export async function initDb(): Promise<void> {
   console.log('[db] Postgres connected')
 }
 
-export function getDb() { return sql }
+export function getDb() { return pool }
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -1100,10 +1134,9 @@ export const inviteCodeQueries = {
    * Atomically check + claim a code. Returns true on successful claim, false
    * if the code is unknown, expired, or exhausted. The corresponding
    * redemption row is written after the successful claim so the two writes
-   * are tightly coupled, but in separate statements (the serverless driver
-   * doesn't support transactions across statements; the worst case here is
-   * a phantom redemption row that points at a now-deleted user, which the
-   * CASCADE on the FK cleans up).
+   * are tightly coupled, but in separate statements (kept that way for
+   * simplicity; the worst case is a phantom redemption row that points at a
+   * now-deleted user, which the CASCADE on the FK cleans up).
    */
   async tryRedeem(code: string, userId: string): Promise<boolean> {
     const now = Date.now()

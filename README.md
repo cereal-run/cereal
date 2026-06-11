@@ -22,7 +22,7 @@ The hosted version has additional payment code (Creem integration, subscription 
 ## Requirements
 
 - Node.js 20+
-- A [Neon](https://neon.tech) Postgres database (free tier works). The backend uses the `@neondatabase/serverless` driver, which speaks Neon's HTTP protocol — a vanilla Postgres connection string will NOT work out of the box. Swapping the driver for `pg` in `src/db/index.ts` to support any Postgres is a welcome contribution.
+- Any Postgres database (15+): Docker, a VPS, Neon, Supabase, RDS, whatever you have. Managed providers usually require TLS — append `?sslmode=require` to your connection string.
 - One or more email accounts to connect (IMAP + SMTP, or OAuth for Gmail/Microsoft)
 
 ## Quick start
@@ -97,7 +97,7 @@ Cereal is a vanilla Node service. Anywhere that runs Node 20+ with HTTPS in fron
 
 - Backend: any Node host (Fly, Render, Railway, a VPS, Docker)
 - Dashboard: any static host (Cloudflare Pages, Netlify, Vercel, nginx)
-- Database: any Postgres (Neon, Supabase, RDS, self-hosted)
+- Database: any Postgres (self-hosted, Docker, Neon, Supabase, RDS)
 
 The backend expects to be behind a TLS-terminating proxy in production. Set `TRUST_PROXY=true` so the real client IP is read from `X-Forwarded-For` — but ONLY when a proxy is actually in front. With it on and no proxy, clients can spoof their IP past the rate limits.
 
@@ -126,7 +126,7 @@ This drops every table. Useful in dev, dangerous in prod.
                                   │                  │
                             ┌─────▼─────┐    ┌──────▼──────┐
                             │ Postgres  │    │ IMAP/SMTP   │
-                            │ (Neon...) │    │ (mailflow)  │
+                            │ (any)     │    │ (mailflow)  │
                             └───────────┘    └─────────────┘
 ```
 
@@ -174,4 +174,4 @@ See `CONTRIBUTING.md`.
 
 ## Acknowledgements
 
-Built on the shoulders of [Fastify](https://fastify.dev), [imapflow](https://imapflow.com), [nodemailer](https://nodemailer.com), [@neondatabase/serverless](https://neon.tech), [argon2](https://github.com/ranisalt/node-argon2), [React](https://react.dev), [Vite](https://vitejs.dev).
+Built on the shoulders of [Fastify](https://fastify.dev), [imapflow](https://imapflow.com), [nodemailer](https://nodemailer.com), [node-postgres](https://node-postgres.com), [argon2](https://github.com/ranisalt/node-argon2), [React](https://react.dev), [Vite](https://vitejs.dev).

@@ -35,7 +35,7 @@ cd backend && npm install && cp .env.example .env && npm run dev
 cd dashboard && npm install && cp .env.example .env && npm run dev
 ```
 
-You'll need a Postgres database. Easiest in dev: a free Neon instance or `docker run postgres`.
+You'll need a Postgres database. Easiest in dev: `docker run -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres`.
 
 ## Code style
 
