@@ -31,18 +31,18 @@ For non-trivial changes, please open an issue first. It saves both sides time. A
 See the main `README.md` for environment setup. Briefly:
 
 ```bash
-cd cereal-backend && npm install && cp .env.example .env && npm run dev
-cd cereal-dashboard && npm install && cp .env.example .env && npm run dev
+cd backend && npm install && cp .env.example .env && npm run dev
+cd dashboard && npm install && cp .env.example .env && npm run dev
 ```
 
-You'll need a Postgres database. 
+You'll need a Postgres database. Easiest in dev: a free Neon instance or `docker run postgres`.
 
 ## Code style
 
 - **No formatter enforced.** The code uses 2-space indent, single quotes, no semicolons in places I forgot them. Match what's around you.
 - **No tests required** for PRs. We don't have a comprehensive suite, and demanding tests where none exist is performative. Bug fixes for things that broke without tests should add a test if it's reasonable.
 - **Comments matter.** This codebase explains itself through commentary that says *why*, not *what*. A PR that adds 100 lines of code without a single explanatory comment will get review notes asking why.
-
+- **Avoid em dashes in user-facing copy.** Use periods, commas, or colons. This is a small house style quirk.
 
 ## Commits
 
@@ -50,8 +50,11 @@ Plain English commit messages. No conventional-commits gates. "Fix UID overflow 
 
 ## Security issues
 
-Please email support@cereal.run instead of filing a public issue. We'll respond within 72 hours.
+Please email [email protected] instead of filing a public issue. We'll respond within 72 hours.
 
+## Code of conduct
+
+Treat people the way you'd want to be treated when you're new to a codebase and asking a "dumb" question. That's the whole policy.
 
 ## License
 

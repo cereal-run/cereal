@@ -6,34 +6,37 @@ If you run several businesses or side projects from one head, you've felt the em
 
 This is the open-source version, AGPL-3.0. The hosted version at [cereal.run](https://cereal.run) is the same code plus payment integration.
 
+## Status
+
+Cereal is early. The hosted version works in production but the surface area is still small. If you self-host: it's IMAP + SMTP + a React dashboard. Nothing magical. The README is honest about what's not finished.
 
 ## What's in this repo
 
 ```
-cereal-backend/    Fastify + Postgres backend. IMAP/SMTP/OAuth.
-cereal-dashboard/  React + Vite dashboard.
+backend/    Fastify + Postgres backend. IMAP/SMTP/OAuth.
+dashboard/  React + Vite dashboard.
 ```
 
-The hosted version has additional payment code and a mobile app that isn't in this repo. Self-hosting means no payment layer to configure: you run the service for yourself or your team, and that's it.
+The hosted version has additional payment code (Creem integration, subscription tables, billing UI) that isn't in this repo. Self-hosting means no payment layer to configure: you run the service for yourself or your team, and that's it.
 
 ## Requirements
 
 - Node.js 20+
-- A Postgres database (Neon, Supabase, RDS, Docker, your own VPS, anything)
+- A [Neon](https://neon.tech) Postgres database (free tier works). The backend uses the `@neondatabase/serverless` driver, which speaks Neon's HTTP protocol — a vanilla Postgres connection string will NOT work out of the box. Swapping the driver for `pg` in `src/db/index.ts` to support any Postgres is a welcome contribution.
 - One or more email accounts to connect (IMAP + SMTP, or OAuth for Gmail/Microsoft)
 
 ## Quick start
 
 ```bash
 # 1. Backend
-cd cereal-backend
+cd backend
 cp .env.example .env
 # Edit .env: set DATABASE_URL, generate ENCRYPTION_KEY with `openssl rand -hex 32`
 npm install
 npm run dev   # http://localhost:3000
 
 # 2. Dashboard (in a second terminal)
-cd cereal-dashboard
+cd dashboard
 cp .env.example .env
 # Edit .env: point VITE_API_BASE at your backend
 npm install
@@ -42,24 +45,22 @@ npm run dev   # http://localhost:5173
 
 Open the dashboard, sign up, follow onboarding. Connect a mailbox via IMAP credentials or OAuth (if configured).
 
-## Invite codes
+## Signups and invite codes
 
-By default signup is gated. Two ways to let people in:
-
-**Env var (simple, single shared code):**
+Signups are OPEN by default — a fresh install is immediately usable. To gate signups (private instance, or as a kill switch against abuse), either set a shared code:
 
 ```
 SIGNUP_INVITE_CODE=anystringyoulike
 ```
 
-**Database table (preferred, supports multiple codes with labels and caps):**
+or seed one or more codes in the database (supports labels, usage caps, expiry):
 
 ```sql
 INSERT INTO invite_codes (code, label, max_uses, used_count, expires_at, created_at, notes)
-VALUES ('OPEN', 'public', NULL, 0, NULL, EXTRACT(EPOCH FROM NOW()) * 1000, 'open code');
+VALUES ('FRIENDS', 'friends', 10, 0, NULL, EXTRACT(EPOCH FROM NOW()) * 1000, 'first wave');
 ```
 
-To allow open signups entirely, unset `SIGNUP_INVITE_CODE` and create one open-ended row in `invite_codes` (above).
+The moment either exists, signup requires a valid code. Remove the env var and delete/expire the rows to reopen.
 
 ## OAuth setup (optional)
 
@@ -71,6 +72,25 @@ To connect Gmail or Microsoft mailboxes without users typing passwords, you'll n
 
 If you skip OAuth, users can still connect any mailbox with IMAP/SMTP credentials (Fastmail, Zoho, iCloud app password, Gmail app password, etc).
 
+## Password reset email
+
+The forgot-password flow needs SMTP credentials Cereal can send from (separate from your users' connected mailboxes). Any transactional provider's SMTP interface works (Postmark, Resend, SES) — or a dedicated mailbox:
+
+```
+SYSTEM_SMTP_HOST=smtp.postmarkapp.com
+SYSTEM_SMTP_PORT=587
+SYSTEM_SMTP_USER=...
+SYSTEM_SMTP_PASS=...
+MAIL_FROM="Cereal <no-reply@yourdomain>"
+DASHBOARD_BASE=https://your-dashboard-url
+```
+
+Unset, the endpoint still responds normally (no config probing) but logs an error server-side instead of sending.
+
+## Error reporting (optional)
+
+Set `SENTRY_DSN` to enable [Sentry](https://sentry.io) error reporting (5xx responses and process crashes, no request bodies or headers attached). Unset, all Sentry calls are no-ops.
+
 ## Deployment
 
 Cereal is a vanilla Node service. Anywhere that runs Node 20+ with HTTPS in front of it works:
@@ -79,7 +99,7 @@ Cereal is a vanilla Node service. Anywhere that runs Node 20+ with HTTPS in fron
 - Dashboard: any static host (Cloudflare Pages, Netlify, Vercel, nginx)
 - Database: any Postgres (Neon, Supabase, RDS, self-hosted)
 
-The backend expects to be behind a TLS-terminating proxy in production. It reads the real client IP from `X-Forwarded-For` when `trustProxy: true` is set in `server.ts` (default).
+The backend expects to be behind a TLS-terminating proxy in production. Set `TRUST_PROXY=true` so the real client IP is read from `X-Forwarded-For` — but ONLY when a proxy is actually in front. With it on and no proxy, clients can spoof their IP past the rate limits.
 
 ## Database
 
@@ -88,7 +108,7 @@ Schema is created automatically on first boot via `initDb()`. No separate migrat
 To wipe the database and start over:
 
 ```bash
-cd cereal-backend
+cd backend
 npm run db:reset
 ```
 
@@ -126,8 +146,11 @@ This drops every table. Useful in dev, dangerous in prod.
 - Rate limits on auth routes via `@fastify/rate-limit`
 - SSRF denylist on IMAP/SMTP host inputs (RFC 1918, link-local, loopback, `.local`/`.internal`)
 - Email bodies are NEVER persisted. Fetched on demand from your mail provider, rendered, discarded.
+- Email HTML renders in a sandboxed iframe (no scripts, no same-origin access) with a deny-all CSP as a second layer
+- Password reset tokens are single-use, 60-minute TTL, stored as SHA-256 hashes only
+- Outbound SMTP always verifies TLS certificates (explicit `SMTP_ALLOW_INSECURE_TLS=true` opt-out for self-signed homelab servers)
 
-If you find a security issue in this code, please email support@cereal.run.
+If you find a security issue in this code, please email [email protected].
 
 ## What's NOT in this version
 
@@ -151,4 +174,4 @@ See `CONTRIBUTING.md`.
 
 ## Acknowledgements
 
-Built on the shoulders of [Fastify](https://fastify.dev), [imapflow](https://imapflow.com), [nodemailer](https://nodemailer.com), [argon2](https://github.com/ranisalt/node-argon2), [React](https://react.dev), [Vite](https://vitejs.dev).
+Built on the shoulders of [Fastify](https://fastify.dev), [imapflow](https://imapflow.com), [nodemailer](https://nodemailer.com), [@neondatabase/serverless](https://neon.tech), [argon2](https://github.com/ranisalt/node-argon2), [React](https://react.dev), [Vite](https://vitejs.dev).

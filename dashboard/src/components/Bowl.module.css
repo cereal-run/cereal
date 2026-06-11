@@ -1,0 +1,230 @@
+.bowl {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  /* Anchor the cross-axis height so bowls with few messages don't collapse.
+     The grid container also has align-items: stretch (default), but only if
+     the grid has a defined row height. Without min-height, each bowl sizes
+     to its own content, producing the uneven row the user reported. */
+  min-height: 320px;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.25s var(--ease);
+  animation: fade-in 0.3s var(--ease) both;
+  box-shadow: var(--shadow-sm);
+}
+
+.bowl:hover {
+  box-shadow: var(--shadow);
+}
+
+/* ── Header — light mode (white bg, bowl-color text, soft shadow) ──── */
+.header {
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  color: var(--bowl-color, var(--orange));
+  position: relative;
+  z-index: 2;
+  /* Soft shadow extending DOWN into the messages area */
+  box-shadow:
+    0 8px 16px -6px rgba(0, 0, 0, 0.10),
+    0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Dark mode: charcoal header with bowl-color text */
+[data-theme="dark"] .header {
+  background: #1c1a17;
+  color: var(--bowl-color, var(--orange));
+  box-shadow:
+    0 10px 20px -10px rgba(0, 0, 0, 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.name {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  color: var(--bowl-color, var(--orange));
+}
+
+.headerDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  background: transparent;
+  /* currentColor picks up from inline style.color set in JSX */
+}
+
+.badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  flex-shrink: 0;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  /* Bowl-color tinted pill — works in both modes */
+}
+
+.composeBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s var(--ease);
+  color: var(--text-3);
+}
+
+.composeBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+.composeBtn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.composeBtn:disabled:hover {
+  background: transparent;
+  color: var(--text-3);
+}
+
+/* Refresh icon spin while a sync is in flight. */
+.spinning {
+  animation: bowlSpin 0.7s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes bowlSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Messages ──────────────────────────────────────────────────────── */
+.messages {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.loader {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--border-med), transparent);
+  border-radius: 100px;
+  margin: 14px;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.empty {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  padding: 28px 0 24px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Agent input ───────────────────────────────────────────────────── */
+.agentInput {
+  border-top: 1px solid var(--border);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.agentTextField {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 8px 11px;
+  font-size: 12px;
+  color: var(--text-1);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s var(--ease);
+}
+
+.agentTextField:focus {
+  border-color: var(--border-heavy);
+}
+
+.agentTextField::placeholder {
+  color: var(--text-3);
+}
+
+/* When parent bowl is agent (dark), inputs invert */
+.bowl[style*="rgb(28, 26, 23)"] .agentTextField::placeholder,
+.bowl[style*="#1c1a17"] .agentTextField::placeholder {
+  color: rgba(232, 227, 218, 0.4);
+}
+
+.agentSendBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--ease);
+  flex-shrink: 0;
+}
+
+.agentSendBtn:hover { background: var(--bg-hover); }
+
+/* ── Load more ─────────────────────────────────────────────────────── */
+.viewAll {
+  padding: 12px 18px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.12s var(--ease);
+  flex-shrink: 0;
+}
+
+.viewAll:hover { background: var(--bg-hover); }
+
+.viewAllCount {
+  opacity: 0.6;
+  font-size: 10.5px;
+  font-weight: 400;
+}

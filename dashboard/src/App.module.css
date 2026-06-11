@@ -1,0 +1,70 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top bar: logo left, search center, actions right ──────────────── */
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px 14px;
+  flex-shrink: 0;
+}
+
+.topbar > :nth-child(1) { justify-self: start; display: flex; align-items: center; }
+.topbar > :nth-child(2) { justify-self: center; }
+.topbar > :nth-child(3) { justify-self: end; }
+
+/* Single unified icon button style for top-bar actions */
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  transition: all 0.15s var(--ease);
+}
+
+.iconBtn:hover {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+
+/* Legacy class for back-compat with Settings.tsx */
+.settingsBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 100px;
+  background: transparent;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  transition: all 0.15s var(--ease);
+}
+
+.settingsBtn:hover {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  padding: 4px 24px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+}

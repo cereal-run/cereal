@@ -1,0 +1,455 @@
+.wrap {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5rem 2rem 2rem;
+  overflow-y: auto;
+  animation: fade-in 0.3s var(--ease) both;
+}
+
+/* ── Logo at top ── */
+.logo {
+  position: absolute;
+  top: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.logoMark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 40px rgba(26,17,8,0.1);
+}
+
+.step {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 0.6rem;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-1);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: var(--text-2);
+  line-height: 1.65;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+/* ── Provider tiles ── */
+.providers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 0;
+}
+
+.providerTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+}
+
+.providerTile:hover {
+  border-color: var(--border-med);
+  background: var(--bg-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,17,8,0.07);
+}
+
+.providerTile.selected {
+  border-color: var(--orange);
+  background: rgba(255,107,53,0.04);
+}
+
+.providerIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.providerName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+/* ── Form fields ── */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.fieldWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.fieldInput {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--border-med);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  color: var(--text-1);
+  background: var(--bg);
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.fieldInput:focus {
+  border-color: var(--orange);
+}
+
+.fieldInput::placeholder {
+  color: var(--text-3);
+}
+
+.helpText {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  line-height: 1.5;
+  margin-top: 0.15rem;
+}
+
+.helpText a {
+  color: var(--orange);
+  text-decoration: none;
+}
+
+.helpText a:hover {
+  text-decoration: underline;
+}
+
+/* ── Advanced IMAP ── */
+.advanced {
+  margin-bottom: 1.25rem;
+}
+
+.advancedToggle {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.advancedToggle:hover {
+  color: var(--text-2);
+}
+
+.advancedFields {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.advancedFields .fieldWrap:first-child {
+  grid-column: 1 / -1;
+}
+
+/* ── Buttons ── */
+.btnPrimary {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnBack {
+  width: 100%;
+  padding: 0.7rem;
+  background: transparent;
+  color: var(--text-3);
+  border: none;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: color 0.15s;
+  margin-top: 0.5rem;
+}
+
+.btnBack:hover {
+  color: var(--text-2);
+}
+
+/* ── Error ── */
+.error {
+  background: rgba(239,68,68,0.08);
+  border: 1.5px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.83rem;
+  color: #dc2626;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+/* ── Success ── */
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.successIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.successTitle {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+}
+
+.successSub {
+  font-size: 0.87rem;
+  color: var(--text-2);
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Progress dots ── */
+.progress {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.progressDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-med);
+  transition: background 0.2s;
+}
+
+.progressDot.active {
+  background: var(--orange);
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── OAuth section ───────────────────────────────────────────────────────── */
+
+.oauthSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.oauthButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, transform 0.05s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+.oauthButton:hover {
+  border-color: var(--text-2);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.oauthButton:active {
+  transform: translateY(1px);
+}
+
+.oauthIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.oauthLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.oauthName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-1);
+}
+
+.oauthDesc {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.oauthDivider {
+  position: relative;
+  text-align: center;
+  margin: 16px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.oauthDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border);
+  z-index: 0;
+}
+
+.oauthDivider span {
+  position: relative;
+  background: var(--bg-card);
+  padding: 0 12px;
+  z-index: 1;
+}
+
+.colors {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.colorDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid;
+  cursor: pointer;
+  background: transparent;
+  transition: transform 0.1s;
+  padding: 0;
+}
+
+.colorDot:hover {
+  transform: scale(1.08);
+}
+
+.colorActive {
+  transform: scale(1.12);
+}

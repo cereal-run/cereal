@@ -1,0 +1,170 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #fef9f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  /* Charcoal text everywhere inside the card, regardless of theme. */
+  color: #1a1108;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1px solid rgba(26, 17, 8, 0.08);
+  border-radius: 20px;
+  padding: 40px 32px;
+  box-shadow: 0 8px 40px rgba(26, 17, 8, 0.06);
+  color: #1a1108;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Calistoga', Georgia, serif;
+  font-weight: 400;
+  font-size: 22px;
+  color: #1a1108;
+  margin-bottom: 32px;
+  justify-content: center;
+}
+
+.logoMark {
+  /* Slightly larger than the dashboard nav mark — login is a centred
+     focal element on a card, not a corner nav. Keeps the SVG ratios
+     identical to favicon + landing. */
+  width: 28px;
+  height: 28px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: 'Calistoga', Georgia, serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.15;
+  margin: 0 0 4px;
+  text-align: center;
+  color: #1a1108;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(26, 17, 8, 0.55);
+  text-align: center;
+  margin: 0 0 28px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26, 17, 8, 0.7);
+}
+
+.input {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 11px 14px;
+  border: 1.5px solid rgba(26, 17, 8, 0.12);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1a1108;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: rgba(26, 17, 8, 0.35);
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(26, 17, 8, 0.4);
+  box-shadow: 0 0 0 3px rgba(26, 17, 8, 0.08);
+}
+
+.hint {
+  font-size: 12px;
+  color: rgba(26, 17, 8, 0.5);
+  margin-top: 2px;
+}
+
+.error {
+  background: rgba(247, 37, 133, 0.08);
+  border: 1px solid rgba(247, 37, 133, 0.3);
+  color: #b91560;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Green submit button, matching the waitlist CTA. */
+.submit {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 16px;
+  background: #06d6a0;
+  color: #0a3d2e;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+  margin-top: 6px;
+}
+
+.submit:hover {
+  background: #05c193;
+  box-shadow: 0 4px 14px rgba(6, 214, 160, 0.25);
+}
+
+.submit:active {
+  transform: translateY(1px);
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switcher {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: rgba(26, 17, 8, 0.6);
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #1a1108;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.linkButton:hover {
+  text-decoration-thickness: 2px;
+}
