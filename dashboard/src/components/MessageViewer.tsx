@@ -71,16 +71,22 @@ export function MessageViewer({ message, accentColor, onClose, onReply, onForwar
   useEffect(() => {
     setLoading(true)
     setSeenLocal(message.seen)
-    getMessageBody(message.accountId, message.uid)
+    // IMAP UIDs are unique only WITHIN a folder, so the body and seen calls
+    // must target the folder this message actually lives in. Without this,
+    // a Sent message (e.g. UID 5 in Sent) fetches INBOX UID 5 — a different
+    // email entirely — which is why a sent reply rendered as an unrelated
+    // inbox message, and why opening it marked the wrong inbox mail as read.
+    const folder = message.isSent ? 'Sent' : 'INBOX'
+    getMessageBody(message.accountId, message.uid, folder)
       .then(b => { setBody(b); setLoading(false) })
       .catch(() => setLoading(false))
 
     // Auto-mark as seen on open
     if (!message.seen) {
-      markSeen(message.accountId, [message.uid]).catch(() => {})
+      markSeen(message.accountId, [message.uid], folder).catch(() => {})
       setSeenLocal(true)
     }
-  }, [message.id, message.accountId, message.uid, message.seen])
+  }, [message.id, message.accountId, message.uid, message.seen, message.isSent])
 
   async function toggleSeen() {
     const folder = message.isSent ? 'Sent' : 'INBOX'

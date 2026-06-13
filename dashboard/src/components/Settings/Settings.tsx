@@ -27,7 +27,7 @@ const GRID_PRESETS = [
 ]
 
 export function SettingsPanel({ bowls, onClose, onUpdateBowl, onDeleteBowl, onGridChange, currentCols, onLogout, theme, onThemeChange }: Props) {
-  const [tab, setTab] = useState<'visual' | 'technical' | 'agents' | 'shortcuts'>('visual')
+  const [tab, setTab] = useState<'visual' | 'technical' | 'agents' | 'shortcuts' | 'support'>('visual')
 
   return (
     <>
@@ -57,6 +57,10 @@ export function SettingsPanel({ bowls, onClose, onUpdateBowl, onDeleteBowl, onGr
             className={`${styles.tab} ${tab === 'technical' ? styles.tabActive : ''}`}
             onClick={() => setTab('technical')}
           >Technical</button>
+          <button
+            className={`${styles.tab} ${tab === 'support' ? styles.tabActive : ''}`}
+            onClick={() => setTab('support')}
+          >Support</button>
         </div>
 
         <div className={styles.body}>
@@ -76,6 +80,7 @@ export function SettingsPanel({ bowls, onClose, onUpdateBowl, onDeleteBowl, onGr
           {tab === 'technical' && (
             <TechnicalTab bowls={bowls} onUpdateBowl={onUpdateBowl} onLogout={onLogout} />
           )}
+          {tab === 'support' && <SupportTab />}
         </div>
       </div>
     </>
@@ -703,4 +708,83 @@ function formatRelative(ts: number): string {
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`
   return `${Math.floor(diff / 86_400_000)}d ago`
+}
+
+/**
+ * Support tab — OSS edition. Self-hosters' first stop is GitHub, not a
+ * support inbox: issues are searchable, fixes are public, and the operator
+ * of this instance may not be the person who wrote the code. Diagnostics
+ * copy included for the same reason as everywhere else: bug reports with
+ * context get fixed faster.
+ */
+function SupportTab() {
+  const [copied, setCopied] = useState(false)
+
+  const diagnostics = [
+    `Time: ${new Date().toISOString()}`,
+    `URL: ${window.location.origin}`,
+    `Browser: ${navigator.userAgent}`,
+    `Viewport: ${window.innerWidth}x${window.innerHeight}`,
+    `Language: ${navigator.language}`,
+  ].join('\n')
+
+  async function copyDiagnostics() {
+    try {
+      await navigator.clipboard.writeText(diagnostics)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard can fail in odd contexts; the <pre> below is the fallback.
+    }
+  }
+
+  return (
+    <>
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Get help</div>
+        <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: '0 0 12px' }}>
+          Running into a bug or missing a feature? Search existing issues
+          first — someone may have hit it already.
+        </p>
+        <a
+          href="https://github.com/cereal-run/cereal/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.primaryBtn}
+          style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}
+        >
+          Open GitHub issues
+        </a>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Reporting a problem</div>
+        <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: '0 0 12px' }}>
+          Include what you were doing, what you expected, and what happened
+          instead. Pasting the diagnostics below saves a round-trip.
+        </p>
+        <button onClick={copyDiagnostics} className={styles.primaryBtn}>
+          {copied ? 'Copied' : 'Copy diagnostics'}
+        </button>
+        <pre style={{
+          marginTop: 10, padding: '10px 12px', borderRadius: 8,
+          background: 'var(--bg-card)', border: '1px solid rgba(128,128,128,0.15)',
+          fontSize: 11, color: 'var(--text-3)', whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word', lineHeight: 1.5, userSelect: 'all',
+        }}>{diagnostics}</pre>
+        <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 8, lineHeight: 1.5 }}>
+          Nothing sensitive in there: no email content, no account data — just
+          browser, screen size, and time.
+        </p>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Security issues</div>
+        <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: 0 }}>
+          Found a vulnerability? Email security@cereal.run privately instead
+          of opening a public issue. See SECURITY.md in the repo.
+        </p>
+      </div>
+    </>
+  )
 }

@@ -12,7 +12,7 @@ const GRID_PRESETS = [
 ];
 export function SettingsPanel({ bowls, onClose, onUpdateBowl, onDeleteBowl, onGridChange, currentCols, onLogout, theme, onThemeChange }) {
     const [tab, setTab] = useState('visual');
-    return (_jsxs(_Fragment, { children: [_jsx("div", { className: styles.overlay, onClick: onClose }), _jsxs("div", { className: styles.panel, children: [_jsxs("div", { className: styles.header, children: [_jsx("span", { className: styles.title, children: "Settings" }), _jsx("button", { className: styles.closeBtn, onClick: onClose, children: _jsx(CloseIcon, { size: 11 }) })] }), _jsxs("div", { className: styles.tabs, children: [_jsx("button", { className: `${styles.tab} ${tab === 'visual' ? styles.tabActive : ''}`, onClick: () => setTab('visual'), children: "Visual" }), _jsx("button", { className: `${styles.tab} ${tab === 'shortcuts' ? styles.tabActive : ''}`, onClick: () => setTab('shortcuts'), children: "Shortcuts" }), _jsx("button", { className: `${styles.tab} ${tab === 'agents' ? styles.tabActive : ''}`, onClick: () => setTab('agents'), children: "Agent keys" }), _jsx("button", { className: `${styles.tab} ${tab === 'technical' ? styles.tabActive : ''}`, onClick: () => setTab('technical'), children: "Technical" })] }), _jsxs("div", { className: styles.body, children: [tab === 'visual' && (_jsx(VisualTab, { bowls: bowls, onUpdateBowl: onUpdateBowl, onDeleteBowl: onDeleteBowl, onGridChange: onGridChange, currentCols: currentCols, theme: theme, onThemeChange: onThemeChange })), tab === 'shortcuts' && _jsx(ShortcutsTab, {}), tab === 'agents' && _jsx(AgentsTab, {}), tab === 'technical' && (_jsx(TechnicalTab, { bowls: bowls, onUpdateBowl: onUpdateBowl, onLogout: onLogout }))] })] })] }));
+    return (_jsxs(_Fragment, { children: [_jsx("div", { className: styles.overlay, onClick: onClose }), _jsxs("div", { className: styles.panel, children: [_jsxs("div", { className: styles.header, children: [_jsx("span", { className: styles.title, children: "Settings" }), _jsx("button", { className: styles.closeBtn, onClick: onClose, children: _jsx(CloseIcon, { size: 11 }) })] }), _jsxs("div", { className: styles.tabs, children: [_jsx("button", { className: `${styles.tab} ${tab === 'visual' ? styles.tabActive : ''}`, onClick: () => setTab('visual'), children: "Visual" }), _jsx("button", { className: `${styles.tab} ${tab === 'shortcuts' ? styles.tabActive : ''}`, onClick: () => setTab('shortcuts'), children: "Shortcuts" }), _jsx("button", { className: `${styles.tab} ${tab === 'agents' ? styles.tabActive : ''}`, onClick: () => setTab('agents'), children: "Agent keys" }), _jsx("button", { className: `${styles.tab} ${tab === 'technical' ? styles.tabActive : ''}`, onClick: () => setTab('technical'), children: "Technical" }), _jsx("button", { className: `${styles.tab} ${tab === 'support' ? styles.tabActive : ''}`, onClick: () => setTab('support'), children: "Support" })] }), _jsxs("div", { className: styles.body, children: [tab === 'visual' && (_jsx(VisualTab, { bowls: bowls, onUpdateBowl: onUpdateBowl, onDeleteBowl: onDeleteBowl, onGridChange: onGridChange, currentCols: currentCols, theme: theme, onThemeChange: onThemeChange })), tab === 'shortcuts' && _jsx(ShortcutsTab, {}), tab === 'agents' && _jsx(AgentsTab, {}), tab === 'technical' && (_jsx(TechnicalTab, { bowls: bowls, onUpdateBowl: onUpdateBowl, onLogout: onLogout })), tab === 'support' && _jsx(SupportTab, {})] })] })] }));
 }
 function ShortcutsTab() {
     const items = [
@@ -303,4 +303,37 @@ function formatRelative(ts) {
     if (diff < 86_400_000)
         return `${Math.floor(diff / 3_600_000)}h ago`;
     return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+/**
+ * Support tab — OSS edition. Self-hosters' first stop is GitHub, not a
+ * support inbox: issues are searchable, fixes are public, and the operator
+ * of this instance may not be the person who wrote the code. Diagnostics
+ * copy included for the same reason as everywhere else: bug reports with
+ * context get fixed faster.
+ */
+function SupportTab() {
+    const [copied, setCopied] = useState(false);
+    const diagnostics = [
+        `Time: ${new Date().toISOString()}`,
+        `URL: ${window.location.origin}`,
+        `Browser: ${navigator.userAgent}`,
+        `Viewport: ${window.innerWidth}x${window.innerHeight}`,
+        `Language: ${navigator.language}`,
+    ].join('\n');
+    async function copyDiagnostics() {
+        try {
+            await navigator.clipboard.writeText(diagnostics);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+        catch {
+            // Clipboard can fail in odd contexts; the <pre> below is the fallback.
+        }
+    }
+    return (_jsxs(_Fragment, { children: [_jsxs("div", { className: styles.section, children: [_jsx("div", { className: styles.sectionTitle, children: "Get help" }), _jsx("p", { style: { fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: '0 0 12px' }, children: "Running into a bug or missing a feature? Search existing issues first \u2014 someone may have hit it already." }), _jsx("a", { href: "https://github.com/cereal-run/cereal/issues", target: "_blank", rel: "noopener noreferrer", className: styles.primaryBtn, style: { display: 'inline-block', textDecoration: 'none', textAlign: 'center' }, children: "Open GitHub issues" })] }), _jsxs("div", { className: styles.section, children: [_jsx("div", { className: styles.sectionTitle, children: "Reporting a problem" }), _jsx("p", { style: { fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: '0 0 12px' }, children: "Include what you were doing, what you expected, and what happened instead. Pasting the diagnostics below saves a round-trip." }), _jsx("button", { onClick: copyDiagnostics, className: styles.primaryBtn, children: copied ? 'Copied' : 'Copy diagnostics' }), _jsx("pre", { style: {
+                            marginTop: 10, padding: '10px 12px', borderRadius: 8,
+                            background: 'var(--bg-card)', border: '1px solid rgba(128,128,128,0.15)',
+                            fontSize: 11, color: 'var(--text-3)', whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word', lineHeight: 1.5, userSelect: 'all',
+                        }, children: diagnostics }), _jsx("p", { style: { fontSize: 12, color: 'var(--text-3)', marginTop: 8, lineHeight: 1.5 }, children: "Nothing sensitive in there: no email content, no account data \u2014 just browser, screen size, and time." })] }), _jsxs("div", { className: styles.section, children: [_jsx("div", { className: styles.sectionTitle, children: "Security issues" }), _jsx("p", { style: { fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: 0 }, children: "Found a vulnerability? Email security@cereal.run privately instead of opening a public issue. See SECURITY.md in the repo." })] })] }));
 }

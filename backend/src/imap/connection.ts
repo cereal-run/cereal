@@ -383,7 +383,19 @@ export async function fetchBody(
   const client = connections.get(account.id)
   if (!client) return null
 
-  const lock = await client.getMailboxLock(folderName)
+  // The caller passes a generic folder hint ('Sent' / 'INBOX'). The real
+  // path varies by provider — Gmail's Sent folder is '[Gmail]/Sent Mail',
+  // others use 'Sent Items', 'INBOX.Sent', etc. Resolve the generic 'Sent'
+  // to the provider's actual path; otherwise getMailboxLock fails on Gmail
+  // and the body comes back empty. UIDs are folder-scoped, so locking the
+  // correct folder is also what keeps a Sent UID from colliding with an
+  // INBOX UID.
+  let resolvedFolder = folderName
+  if (/^sent$/i.test(folderName)) {
+    resolvedFolder = (await findSentFolder(client)) ?? folderName
+  }
+
+  const lock = await client.getMailboxLock(resolvedFolder)
   try {
     const msg = await client.fetchOne(String(uid), { source: true }, { uid: true }) as any
     if (!msg?.source) return null
@@ -410,7 +422,14 @@ export async function markSeenOnServer(
 ): Promise<void> {
   const client = connections.get(account.id)
   if (!client) return
-  const lock = await client.getMailboxLock(folderName)
+  // Same generic-to-real folder resolution as fetchBody: 'Sent' must map to
+  // the provider's actual Sent path (e.g. '[Gmail]/Sent Mail') or the lock
+  // fails and the flag never gets set.
+  let resolvedFolder = folderName
+  if (/^sent$/i.test(folderName)) {
+    resolvedFolder = (await findSentFolder(client)) ?? folderName
+  }
+  const lock = await client.getMailboxLock(resolvedFolder)
   try {
     await client.messageFlagsAdd(uids.join(','), ['\\Seen'], { uid: true })
     messageQueries.markSeen(account.id, uids)
@@ -422,7 +441,11 @@ export async function markUnseenOnServer(
 ): Promise<void> {
   const client = connections.get(account.id)
   if (!client) return
-  const lock = await client.getMailboxLock(folderName)
+  let resolvedFolder = folderName
+  if (/^sent$/i.test(folderName)) {
+    resolvedFolder = (await findSentFolder(client)) ?? folderName
+  }
+  const lock = await client.getMailboxLock(resolvedFolder)
   try {
     await client.messageFlagsRemove(uids.join(','), ['\\Seen'], { uid: true })
     await messageQueries.markUnseen(account.id, uids)
