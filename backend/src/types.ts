@@ -7,8 +7,10 @@ export interface Bowl {
   isSpam: boolean
   isInbox?: boolean              // hidden system catch-all bowl
   isAgent?: boolean              // bowl for agent messages (no email routing)
+  isNotes?: boolean              // freeform notes bowl (no email routing)
   defaultFrom: string | null   // primary send address for this bowl
   addresses: string[]          // all addresses that route into this bowl
+  notes?: string               // note text; only meaningful when isNotes
   createdAt: number
 }
 

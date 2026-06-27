@@ -3,6 +3,7 @@ import {
   getSpecialBowls,
   setupSpamBowl,
   setupAgentBowl,
+  setupNotesBowl,
   deleteBowl,
   getAccounts,
   type AccountListItem,
@@ -39,6 +40,7 @@ export function SpecialBowlsSetup() {
   const [loading, setLoading] = useState(true)
   const [spam, setSpam] = useState<Bowl | null>(null)
   const [agent, setAgent] = useState<Bowl | null>(null)
+  const [notes, setNotes] = useState<Bowl | null>(null)
   const [accounts, setAccounts] = useState<AccountListItem[]>([])
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function SpecialBowlsSetup() {
       ])
       setSpam(special.spam)
       setAgent(special.agent)
+      setNotes(special.notes)
       setAccounts(accts)
     } finally {
       setLoading(false)
@@ -68,6 +71,7 @@ export function SpecialBowlsSetup() {
     <div className={styles.container}>
       <SpamSection bowl={spam} accounts={accounts} onChange={refresh} />
       <AgentSection bowl={agent} onChange={refresh} />
+      <NotesSection bowl={notes} onChange={refresh} />
     </div>
   )
 }
@@ -319,6 +323,107 @@ function AgentForm(props: {
 }
 
 // ── Shared bits ─────────────────────────────────────────────────────────────
+
+function NotesSection(props: { bowl: Bowl | null; onChange: () => void }) {
+  const { bowl, onChange } = props
+  const [open, setOpen] = useState(false)
+
+  if (bowl) {
+    return (
+      <section className={styles.section}>
+        <header className={styles.header}>
+          <div className={styles.titleRow}>
+            <span className={styles.dot} style={{ background: bowl.color }} />
+            <h3 className={styles.title}>Notes bowl</h3>
+            <span className={styles.badgeOk}>Configured</span>
+          </div>
+          <p className={styles.subtitle}>
+            A freeform notepad in your dashboard, named <strong>{bowl.name}</strong>.
+            Autosaves as you type. No email, just a place to jot things.
+          </p>
+        </header>
+        <DisconnectButton
+          bowl={bowl}
+          label="Notes bowl"
+          onConfirm={onChange}
+        />
+      </section>
+    )
+  }
+
+  return (
+    <section className={styles.section}>
+      <header className={styles.header}>
+        <div className={styles.titleRow}>
+          <span className={styles.dotMuted} />
+          <h3 className={styles.title}>Notes bowl</h3>
+          <span className={styles.badgeOpt}>Optional</span>
+        </div>
+        <p className={styles.subtitle}>
+          A simple notepad that lives in your dashboard. Follow-ups, invoice
+          numbers, reminders. Autosaves. Skip if you don't need it.
+        </p>
+      </header>
+      {!open ? (
+        <button className={styles.cta} onClick={() => setOpen(true)}>
+          Set up notes bowl
+        </button>
+      ) : (
+        <NotesForm
+          onCancel={() => setOpen(false)}
+          onCreated={() => { setOpen(false); onChange() }}
+        />
+      )}
+    </section>
+  )
+}
+
+function NotesForm(props: {
+  onCancel: () => void
+  onCreated: () => void
+}) {
+  const { onCancel, onCreated } = props
+  const [name, setName] = useState('Notes')
+  const [color, setColor] = useState('#f59e0b')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit() {
+    setBusy(true)
+    setError(null)
+    try {
+      await setupNotesBowl({ name, color })
+      onCreated()
+    } catch (e: any) {
+      setError(e?.message ?? 'Something went wrong.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className={styles.form}>
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>Bowl name</span>
+        <input
+          className={styles.input}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={50}
+        />
+      </label>
+      <ColorPicker value={color} onChange={setColor} />
+      {error && <p className={styles.error}>{error}</p>}
+      <div className={styles.actions}>
+        <button className={styles.cancel} onClick={onCancel} disabled={busy}>
+          Cancel
+        </button>
+        <button className={styles.submit} onClick={submit} disabled={busy || !name.trim()}>
+          {busy ? 'Creating…' : 'Create notes bowl'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function ColorPicker(props: { value: string; onChange: (c: string) => void }) {
   return (

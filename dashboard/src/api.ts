@@ -284,6 +284,7 @@ export async function deleteBowl(bowlId: string) {
 export async function getSpecialBowls(): Promise<{
   spam: Bowl | null
   agent: Bowl | null
+  notes: Bowl | null
 }> {
   return req('/bowls/special')
 }
@@ -306,6 +307,31 @@ export async function setupAgentBowl(opts: {
   return req('/bowls/agent/setup', {
     method: 'POST',
     body: JSON.stringify(opts),
+  })
+}
+
+// ── Notes bowl ────────────────────────────────────────────────────────────────
+// A single freeform notepad, separate from email. Created lazily on first
+// write, autosaved from the dashboard.
+
+export async function setupNotesBowl(opts: {
+  name?: string
+  color?: string
+} = {}): Promise<{ ok: boolean; bowl: Bowl; created: boolean }> {
+  return req('/bowls/notes/setup', {
+    method: 'POST',
+    body: JSON.stringify(opts),
+  })
+}
+
+export async function getNotesBowl(): Promise<{ bowl: Bowl | null }> {
+  return req('/bowls/notes')
+}
+
+export async function saveNotes(notes: string): Promise<{ ok: boolean }> {
+  return req('/bowls/notes', {
+    method: 'PUT',
+    body: JSON.stringify({ notes }),
   })
 }
 

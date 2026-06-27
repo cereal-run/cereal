@@ -5,8 +5,10 @@ export interface Bowl {
   isSpam: boolean
   isInbox?: boolean
   isAgent?: boolean
+  isNotes?: boolean
   defaultFrom: string | null
   addresses: string[]
+  notes?: string
   createdAt: number
   unreadCount: number
 }

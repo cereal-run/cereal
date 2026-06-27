@@ -6,6 +6,7 @@ import { useTheme } from './hooks/useTheme'
 import { Logo } from './components/Logo'
 import { BowlCard } from './components/Bowl'
 import { AddBowl } from './components/AddBowl'
+import { NotesBowl } from './components/NotesBowl'
 import { SettingsPanel } from './components/Settings/Settings'
 import { Onboarding } from './components/Onboarding'
 import { Login } from './components/Login'
@@ -217,6 +218,7 @@ export function App() {
         }}
       >
         {[...bowls]
+          .filter((b) => !b.isNotes)
           .sort((a, b) => {
             const aIsAgent = a.id === 'agent' || a.name.toLowerCase() === 'agent'
             const bIsAgent = b.id === 'agent' || b.name.toLowerCase() === 'agent'
@@ -233,6 +235,14 @@ export function App() {
             onDelete={handleDeleteBowl}
           />
         ))}
+        {/* Notes bowl: a special bowl holding a freeform notepad rather than
+            email. Rendered with its own component, filtered out of the map
+            above so it never renders as an email bowl. */}
+        {bowls.some((b) => b.isNotes) && (
+          <NotesBowl
+            color={bowls.find((b) => b.isNotes)?.color ?? '#f59e0b'}
+          />
+        )}
         {realBowlsLoaded && <AddBowl onAdd={handleAddBowl} onComplete={loadBowls} />}
       </div>
 
@@ -240,7 +250,7 @@ export function App() {
       {settingsOpen && (
         <SettingsPanel
           bowls={bowls}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => { setSettingsOpen(false); void loadBowls() }}
           onUpdateBowl={handleUpdateBowl}
           onDeleteBowl={handleDeleteBowl}
           onGridChange={(newCols) => setCols(newCols)}

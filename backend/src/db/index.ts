@@ -168,8 +168,10 @@ async function createSchema(): Promise<void> {
       is_spam      BOOLEAN NOT NULL DEFAULT false,
       is_inbox     BOOLEAN NOT NULL DEFAULT false,
       is_agent     BOOLEAN NOT NULL DEFAULT false,
+      is_notes     BOOLEAN NOT NULL DEFAULT false,
       default_from TEXT,
       addresses    JSONB NOT NULL DEFAULT '[]',
+      notes        TEXT NOT NULL DEFAULT '',
       created_at   BIGINT NOT NULL
     )
   `
@@ -178,10 +180,13 @@ async function createSchema(): Promise<void> {
   // Safe to run repeatedly; ADD COLUMN IF NOT EXISTS is idempotent.
   await q`ALTER TABLE bowls ADD COLUMN IF NOT EXISTS is_inbox BOOLEAN NOT NULL DEFAULT false`
   await q`ALTER TABLE bowls ADD COLUMN IF NOT EXISTS is_agent BOOLEAN NOT NULL DEFAULT false`
+  await q`ALTER TABLE bowls ADD COLUMN IF NOT EXISTS is_notes BOOLEAN NOT NULL DEFAULT false`
+  await q`ALTER TABLE bowls ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT ''`
   // Partial unique indexes: a user has at most one spam bowl and at most one
   // agent bowl. The dashboard's "Set up" buttons rely on this to be idempotent.
   await q`CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_spam_bowl ON bowls(user_id) WHERE is_spam = true`
   await q`CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_agent_bowl ON bowls(user_id) WHERE is_agent = true`
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_notes_bowl ON bowls(user_id) WHERE is_notes = true`
 
   await q`
     CREATE TABLE IF NOT EXISTS accounts (
@@ -469,16 +474,34 @@ export const waitlistQueries = {
 export const bowlQueries = {
   async upsert(bowl: Bowl, userId: string): Promise<void> {
     await q`
-      INSERT INTO bowls (id, user_id, name, color, is_spam, is_inbox, is_agent, default_from, addresses, created_at)
+      INSERT INTO bowls (id, user_id, name, color, is_spam, is_inbox, is_agent, is_notes, default_from, addresses, notes, created_at)
       VALUES (${bowl.id}, ${userId}, ${bowl.name}, ${bowl.color}, ${bowl.isSpam}, ${bowl.isInbox ?? false},
-              ${bowl.isAgent ?? false}, ${bowl.defaultFrom ?? null}, ${JSON.stringify(bowl.addresses)}, ${bowl.createdAt})
+              ${bowl.isAgent ?? false}, ${bowl.isNotes ?? false}, ${bowl.defaultFrom ?? null}, ${JSON.stringify(bowl.addresses)}, ${bowl.notes ?? ''}, ${bowl.createdAt})
       ON CONFLICT (id) DO UPDATE SET
         name         = excluded.name,
         color        = excluded.color,
         is_spam      = excluded.is_spam,
         is_agent     = excluded.is_agent,
+        is_notes     = excluded.is_notes,
         default_from = excluded.default_from,
         addresses    = excluded.addresses
+        -- notes intentionally not updated here; updateNotes() owns that so a
+        -- name/color edit can never wipe the user's note text.
+    `
+  },
+  // Find this user's notes bowl, if any. Returns null if not set up.
+  async findNotes(userId: string): Promise<Bowl | null> {
+    const rows = await q`
+      SELECT * FROM bowls WHERE user_id = ${userId} AND is_notes = true LIMIT 1
+    `
+    return rows[0] ? rowToBowl(rows[0]) : null
+  },
+  // Persist note text for the user's notes bowl. Scoped by userId so a user
+  // can only write their own notes. No-op if they have no notes bowl.
+  async updateNotes(userId: string, notes: string): Promise<void> {
+    await q`
+      UPDATE bowls SET notes = ${notes}
+      WHERE user_id = ${userId} AND is_notes = true
     `
   },
   // Find this user's spam bowl, if any. Returns null if not set up.
@@ -530,6 +553,7 @@ export const bowlQueries = {
       SELECT * FROM bowls
       WHERE user_id = ${userId}
         AND is_inbox = false
+        AND is_notes = false
         AND addresses @> ${JSON.stringify([lower])}::jsonb
       LIMIT 1
     `
@@ -1006,8 +1030,10 @@ function rowToBowl(row: any): Bowl {
     isSpam: Boolean(row.is_spam),
     isInbox: Boolean(row.is_inbox),
     isAgent: Boolean(row.is_agent),
+    isNotes: Boolean(row.is_notes),
     defaultFrom: row.default_from ?? null,
     addresses: Array.isArray(row.addresses) ? row.addresses : JSON.parse(row.addresses || '[]'),
+    notes: row.notes ?? '',
     createdAt: Number(row.created_at),
   }
 }

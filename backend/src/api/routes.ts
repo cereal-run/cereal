@@ -722,11 +722,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // users may never set up either one.
   app.get('/bowls/special', async (req, reply) => {
     if (!req.userId) return reply.status(401).send({ error: 'Not authenticated' })
-    const [spam, agent] = await Promise.all([
+    const [spam, agent, notes] = await Promise.all([
       bowlQueries.findSpam(req.userId),
       bowlQueries.findAgent(req.userId),
+      bowlQueries.findNotes(req.userId),
     ])
-    return { spam, agent }
+    return { spam, agent, notes }
   })
 
   // ── POST /bowls/spam/setup — explicit spam bowl setup ──────────────────────
@@ -808,6 +809,67 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     await bowlQueries.upsert(bowl, req.userId)
     return { ok: true, bowl, created: true }
   })
+
+  // ── POST /bowls/notes/setup — explicit notes bowl setup ────────────────────
+  // The notes bowl is a logical container holding a single freeform text
+  // note. No email account, no address routing. Idempotent: returns the
+  // existing notes bowl if one is already set up.
+  app.post<{
+    Body: { name?: string; color?: string }
+  }>('/bowls/notes/setup', async (req, reply) => {
+    if (!req.userId) return reply.status(401).send({ error: 'Not authenticated' })
+
+    const existing = await bowlQueries.findNotes(req.userId)
+    if (existing) return { ok: true, bowl: existing, created: false }
+
+    const name = (req.body.name ?? 'Notes').trim()
+    const color = (req.body.color ?? '#f59e0b').trim()
+
+    const validationError = validateBowlInput({ name, color, defaultFrom: null, addresses: [] })
+    if (validationError) return reply.status(400).send({ error: validationError })
+
+    const bowl: Bowl = {
+      id: nanoid(10),
+      name,
+      color,
+      isSpam: false,
+      isInbox: false,
+      isAgent: false,
+      isNotes: true,
+      defaultFrom: null,
+      addresses: [],
+      notes: '',
+      createdAt: Date.now(),
+    }
+    await bowlQueries.upsert(bowl, req.userId)
+    return { ok: true, bowl, created: true }
+  })
+
+  // ── GET /bowls/notes — fetch the notes bowl (or null) ──────────────────────
+  app.get('/bowls/notes', async (req, reply) => {
+    if (!req.userId) return reply.status(401).send({ error: 'Not authenticated' })
+    const bowl = await bowlQueries.findNotes(req.userId)
+    return { bowl: bowl ?? null }
+  })
+
+  // ── PUT /bowls/notes — save note text (autosaved from dashboard) ───────────
+  // Length-capped to keep a single text blob reasonable. Scoped to the user;
+  // updateNotes only touches the caller's own notes bowl.
+  app.put<{ Body: { notes: string } }>(
+    '/bowls/notes', async (req, reply) => {
+      if (!req.userId) return reply.status(401).send({ error: 'Not authenticated' })
+      const text = typeof req.body?.notes === 'string' ? req.body.notes : ''
+      if (text.length > 256_000) {
+        return reply.status(413).send({ error: 'Note too long' })
+      }
+      const existing = await bowlQueries.findNotes(req.userId)
+      if (!existing) {
+        return reply.status(404).send({ error: 'No notes bowl. Set one up first.' })
+      }
+      await bowlQueries.updateNotes(req.userId, text)
+      return { ok: true }
+    }
+  )
 
   // ── PATCH /bowls/:bowlId — update bowl addresses/defaultFrom ─────────────────
   app.patch<{
